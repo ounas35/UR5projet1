@@ -25,8 +25,8 @@ def red_hsv():
     # V -> 50-160
 
     # define range of red color in HSV
-    lower_hsv = np.array([0, 0, 0]) 
-    higher_hsv = np.array([19, 255, 255])
+    lower_hsv = np.array([0, 70, 0]) 
+    higher_hsv = np.array([19, 255, 235])
     
     # generating mask for red color
     mask = cv.inRange(hsv_img, lower_hsv, higher_hsv)
@@ -104,15 +104,17 @@ while True:
 
     hsv_img = cv.cvtColor(frame2, cv.COLOR_BGR2HSV)
 
-    mask = red_hsv()
+    mask = green_hsv()
+    print(mask)
 
     detected_img = cv.bitwise_and(frame2, frame2, mask= mask)
+    cv.imshow("mask", mask)
     cv.imshow("detected image", detected_img)
 
     if cv.waitKey(1) == ord('q'):
         break
 
-
+print(mask)
 #-------------------CLOSE CAMERA-------------------
 cap1.release()
 cap2.release()

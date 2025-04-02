@@ -63,7 +63,7 @@ def green_hsv():
     mask = cv2.inRange(hsv_img, lower_hsv, higher_hsv)
     return mask
 
-def find_cube(frame, mask, elements):
+def find_cube(frame, mask, elements,square_color):
     elements_color = 0
     Xs = []
     Ys = []
@@ -87,7 +87,7 @@ def find_cube(frame, mask, elements):
                 # Vérifier si la couleur de la région correspond à l'une des plages définies
                 if cv2.inRange(hsv_roi, lower, upper).any():
                     elements_color += 1
-                    cv2.circle(frame, (int(x), int(y)), int(rayon), [0, 0, 255], 2)
+                    cv2.circle(frame, (int(x), int(y)), int(rayon), square_color, 2)
 
                     Xs.append(x)
                     Ys.append(y)
@@ -121,14 +121,16 @@ while True:
     elements_green=0
     mask_green = green_hsv()
     detected_img = cv2.bitwise_and(frame, frame, mask= mask_green)
-    elements_green, frame, Xs_green, Ys_Green = find_cube(frame, mask_green, elements_green)
+    color_green = [0,255,0]
+    elements_green, frame, Xs_green, Ys_Green = find_cube(frame, mask_green, elements_green,color_green)
     posX['green'] = Xs_green
     posY['green'] = Ys_Green
 
     elements_blue=0
     mask_blue = blue_hsv()
     detected_img = cv2.bitwise_and(frame, frame, mask= mask_blue)
-    elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue)
+    color_blue = [255,0,0]
+    elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue)
     posX['blue'] = Xs_blue
     posY['blue'] = Ys_blue
   
@@ -136,13 +138,17 @@ while True:
     elements_red=0
     mask_red = red_hsv()
     detected_red = cv2.bitwise_and(frame, frame, mask= mask_red)
-    elements_red, frame = find_cube(frame, mask_red, elements_red)
-    '''  
+    color_red = [0,0,255]
+    elements_red, frame, Xs_red, Ys_red = find_cube(frame, mask_red, elements_red,color_red)
+    posX['red'] = Xs_red
+    posY['red'] = Ys_red  
+    '''
     
     elements_yellow=0
     mask_yellow = yellow_hsv()
     detected_yellow = cv2.bitwise_and(frame, frame, mask= mask_yellow)
-    elements_yellow, frame, Xs_yellow, Ys_yellow= find_cube(frame, mask_yellow, elements_yellow)
+    color_yellow = [0,255,255]
+    elements_yellow, frame, Xs_yellow, Ys_yellow= find_cube(frame, mask_yellow, elements_yellow,color_yellow)
     posX['yellow'] = Xs_yellow
     posY['yellow'] = Ys_yellow
 

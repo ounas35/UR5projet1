@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import pyrealsense2 as rs
+import math
 
 '''
 for i in range(30):
@@ -37,7 +38,7 @@ def blue_hsv():
     mask = cv2.inRange(hsv_img, lower_hsv, higher_hsv)
     return mask
 
-def find_cube(frame, mask, elements,square_color, taille_rayon):
+def find_cube(frame, mask, elements,square_color, taille_rayon, box):
     elements_color = 0
     Xs = []
     Ys = []
@@ -46,9 +47,7 @@ def find_cube(frame, mask, elements,square_color, taille_rayon):
     for region in c:
             ((x, y), rayon) = cv2.minEnclosingCircle(region)
             rect = cv2.minAreaRect(region)
-            box = cv2.boxPoints(rect)
-            box = np.intp(box)
-            cv2.drawContours(frame,[box],0,(0,0,255),2)
+        
             if(rayon > 7 and rayon < 50):
                 #elements_color += 1
 
@@ -65,15 +64,53 @@ def find_cube(frame, mask, elements,square_color, taille_rayon):
                 # Vérifier si la couleur de la région correspond à l'une des plages définies
                 if cv2.inRange(hsv_roi, lower, upper).any():
                     # Vérifier la taille du rayon 
-                    if rayon > taille_rayon : 
-                        elements_color += 1
-                        print(f"Rayon : {rayon}")
-                        cv2.circle(frame, (int(x), int(y)), int(rayon), square_color, 2)                # Square
-                        cv2.circle(frame,(int(x), int(y)),5,square_color,2)                             # Centre
-                        Xs.append(int(x))
-                        Ys.append(int(y))
+                    if rayon > taille_rayon :
+                        if x > box[0][0] and x < box[1][0] and y > box[0][1] and y < box[3][1]:
+                            elements_color += 1
+                            #print(f"Rayon : {rayon}")
+                            cv2.circle(frame, (int(x), int(y)), int(rayon), square_color, 2)                # Square
+                            cv2.circle(frame,(int(x), int(y)),5,square_color,2)                             # Centre
+                            Xs.append(int(x))
+                            Ys.append(int(y))
 
     return elements_color, frame, Xs, Ys
+
+def find_grid(frame, mask, square_color, taille_rayon):
+    box = []
+    elements, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    c = sorted(elements, key=cv2.contourArea)
+    for region in c:
+            ((x, y), rayon) = cv2.minEnclosingCircle(region)
+            rect = cv2.minAreaRect(region)
+
+            if(rayon > 150 and rayon < 300):
+
+                # Extraire la couleur hvs de la région
+                roi = frame[int(y)-int(rayon):int(y)+int(rayon), int(x)-int(rayon):int(x)+int(rayon)]
+                
+                #hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+                hsv_roi = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+                # Définir les plages de couleur pour le bleu, le vert, le jaune et l'orange
+                lower = np.array([102, 125, 0])
+                upper = np.array([120, 255, 180])
+
+                # Vérifier si la couleur de la région correspond à l'une des plages définies
+                if cv2.inRange(hsv_roi, lower, upper).any():
+                    # Vérifier la taille du rayon 
+                    if rayon > taille_rayon : 
+                        #print(f"Rayon : {rayon}")
+                        
+                        box = cv2.boxPoints(rect)
+                        box = np.intp(box)
+                        box[0] = (x - rayon*math.sqrt(2)/2 , y - rayon*math.sqrt(2)/2) 
+                        box[1] = (x + rayon*math.sqrt(2)/2,  y - rayon*math.sqrt(2)/2 )
+                        box[2] = (x + rayon*math.sqrt(2)/2,  y + rayon*math.sqrt(2)/2 )
+                        box[3] = (x - rayon*math.sqrt(2)/2,  y + rayon*math.sqrt(2)/2 )
+                        box = np.intp(box)
+                        cv2.drawContours(frame,[box],0,square_color,2)
+
+    return frame, box
 
 """
 Utilisation de la camera intel realsense
@@ -155,12 +192,17 @@ while True:
     posY = {}
 
     hsv_img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-   
+
     elements_blue=0
     mask_blue = blue_hsv()
     detected_img = cv2.bitwise_and(frame, frame, mask= mask_blue)
+
+
+    color_green = [0,255,0]
+    frame, box= find_grid(frame, mask_blue, color_green,taille_rayon)
+
     color_blue = [255,0,0]
-    elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon)
+    elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon,box)
 
     cv2.imshow('Contours Connexes', frame)
 
@@ -174,7 +216,7 @@ for i in range(30):
 cv2.destroyAllWindows()
 cap.release()
 
-elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon)
+elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon,box)
 posX['blue'] = Xs_blue
 posY['blue'] = Ys_blue
 
@@ -190,7 +232,8 @@ for key in posX.keys():
     
 Pos = np.empty((len(Xs_values),3))
 for i in range(len(Xs_values)):
-    Pos[i][0],Pos[i][1],Pos[i][2]  = positionXYZ(Xs_values[i],Ys_values[i])
-      
 
+    Pos[i][0],Pos[i][1],Pos[i][2] = positionXYZ(Xs_values[i],Ys_values[i])
+
+print(Pos)
 print(len(Pos))

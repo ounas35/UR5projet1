@@ -1,14 +1,13 @@
 import cv2
 import numpy as np
 import pyrealsense2 as rs
+import numpy as np 
+import rtde_receive
+import rtde_control
+import dashboard_client
+import cv2
 
-'''
-for i in range(30):
-
-    cap = cv2.VideoCapture(i)
-    if cap.isOpened():
-        print(i)
-'''
+#-------------------FUNCTIONS-------------------
 
 # Lower and higher HSV value for red color
 def yellow_hsv():
@@ -98,9 +97,8 @@ def find_cube(frame, mask, elements,square_color, taille_rayon):
 
     return elements_color, frame, Xs, Ys
 
-"""
-Utilisation de la camera intel realsense
-"""
+
+#Utilisation de la camera intel realsense
 def initialize_device():
     # Create a pipeline
     pipeline = rs.pipeline()
@@ -135,9 +133,7 @@ def initialize_device():
     return pipeline, align, depth_scale,color_intrinsics,color_extrinsics
 
 
-"""
-Estimation de position X, Y, Z par la camera realsense dans le repere camera
-"""
+#Estimation de position X, Y, Z par la camera realsense dans le repere camera
 def positionXYZ(x, y):
     # x et y en pixel
     pipeline, align, depth_scale, color_intrinsics,color_extrinsics = initialize_device()
@@ -153,11 +149,24 @@ def positionXYZ(x, y):
     point = rs.rs2_deproject_pixel_to_point(color_intrinsics, [x, y], depth)
     # en mètres m
     point=[point[0]*1000, point[1]*1000, point[2]*1000]
+    # Release the camera 
+    pipeline.stop()
     return point
 
-cap = cv2.VideoCapture(6)
+#-------------------INITIALISATION-------------------
 
+#Parameters
 taille_rayon = 20
+articulationsCubeUp =[-1.4837225119220179, -2.046366516743795, 1.0656824111938477, -0.6960395018206995, -1.5023983160602015, -3.102428976689474]
+articulationsGridUp = [0.24094359576702118, -1.9523752371417444, 1.6526517868041992, -1.301077667866842, -1.5334914366351526, -1.3105343023883265]
+
+#Configuration
+robot_r = rtde_receive.RTDEReceiveInterface("10.2.30.60")
+robot = rtde_control.RTDEControlInterface("10.2.30.60")
+dashboard =dashboard_client.DashboardClient("10.2.30.60")
+
+cap = cv2.VideoCapture(6)
+robot.moveJ(articulationsCubeUp)
 
 for i in range(30):
     ret, frame = cap.read()
@@ -165,6 +174,10 @@ for i in range(30):
 if not cap.isOpened():
     print("Cannot open camera")
     exit()
+
+#Robot on the cubes
+print("Put the robot on the top of the cubes")
+print("Tap q to register the position of the camera on the grid")
 
 while True:
 
@@ -208,27 +221,21 @@ while True:
     elements_yellow, frame, Xs_yellow, Ys_yellow= find_cube(frame, mask_yellow, elements_yellow,color_yellow,taille_rayon)
 
 
-
     cv2.imshow('Contours Connexes', frame)
 
     # Contrôle de flux
     if cv2.waitKey(1) == ord('q'):
+        poseCubeUp = robot_r.getActualTCPPose()
+        articulationsCubeUp = robot_r.getActualQ()
         break
 
-
-for i in range(30):
-    ret, frame = cap.read()
-cv2.destroyAllWindows()
-cap.release()
-elements_green, frame, Xs_green, Ys_Green = find_cube(frame, mask_green, elements_green,color_green,taille_rayon)
-posX['green'] = Xs_green
-posY['green'] = Ys_Green
-elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon)
-posX['blue'] = Xs_blue
 posY['blue'] = Ys_blue
 elements_yellow, frame, Xs_yellow, Ys_yellow= find_cube(frame, mask_yellow, elements_yellow,color_yellow,taille_rayon)
 posX['yellow'] = Xs_yellow
 posY['yellow'] = Ys_yellow
+
+# Release the camera to use it in rease
+cap.release()
 
 # Messure de distance par rapport la caméra
 Xs_values = []
@@ -243,5 +250,38 @@ Pos = np.empty((len(Xs_values),3))
 for i in range(len(Xs_values)):
     Pos[i][0],Pos[i][1],Pos[i][2]  = positionXYZ(Xs_values[i],Ys_values[i])
       
-
 print(len(Pos))
+
+#Move to grid position up
+
+robot.moveJ(articulationsGridUp)
+poseGridUp = robot_r.getActualTCPPose()
+
+# Start the camera to check the grid position
+cap1 = cv2.VideoCapture(6)
+
+print("Tap q to register the position of the camera on the grid")
+while True:
+
+    if not ret:
+        print("Can't receive frame (stream end?). Exiting ...")
+        break
+    
+    ret, background = cap1.read()
+    cv2.imshow('Image de fond', background)
+    cv2.imwrite('Images/background.png', background)
+    
+    # Contrôle de flux
+    if cv2.waitKey(1) == ord('q'):
+        poseGridUp = robot_r.getActualTCPPose()
+        articulationsGridUp = robot_r.getActualQ()
+        break
+
+cv2.destroyAllWindows()
+cap.release()
+
+#-------------------CYCLE-------------------
+
+
+
+

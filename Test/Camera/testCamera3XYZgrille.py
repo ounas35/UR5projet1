@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import pyrealsense2 as rs
 import math
+import time
 
 '''
 for i in range(30):
@@ -38,7 +39,7 @@ def blue_hsv():
     mask = cv2.inRange(hsv_img, lower_hsv, higher_hsv)
     return mask
 
-def find_cube(frame, mask, elements,square_color, taille_rayon, box):
+def find_cube_grid(frame, mask, elements,square_color, taille_rayon):
     elements_color = 0
     Xs = []
     Ys = []
@@ -65,13 +66,13 @@ def find_cube(frame, mask, elements,square_color, taille_rayon, box):
                 if cv2.inRange(hsv_roi, lower, upper).any():
                     # Vérifier la taille du rayon 
                     if rayon > taille_rayon :
-                        if x > box[0][0] and x < box[1][0] and y > box[0][1] and y < box[3][1]:
-                            elements_color += 1
-                            #print(f"Rayon : {rayon}")
-                            cv2.circle(frame, (int(x), int(y)), int(rayon), square_color, 2)                # Square
-                            cv2.circle(frame,(int(x), int(y)),5,square_color,2)                             # Centre
-                            Xs.append(int(x))
-                            Ys.append(int(y))
+                        #if x > box[0][0] and x < box[1][0] and y > box[0][1] and y < box[3][1]:
+                        elements_color += 1
+                        #print(f"Rayon : {rayon}")
+                        cv2.circle(frame, (int(x), int(y)), int(rayon), square_color, 2)                # Square
+                        cv2.circle(frame,(int(x), int(y)),5,square_color,2)                             # Centre
+                        Xs.append(int(x))
+                        Ys.append(int(y))
 
     return elements_color, frame, Xs, Ys
 
@@ -124,7 +125,6 @@ def initialize_device():
     pipeline_profile = config.resolve(pipeline_wrapper)
     device = pipeline_profile.get_device()
 
-
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
@@ -148,14 +148,14 @@ def initialize_device():
 
     return pipeline, align, depth_scale,color_intrinsics,color_extrinsics
 
-
 """
 Estimation de position X, Y, Z par la camera realsense dans le repere camera
 """
-def positionXYZ(x, y):
+def positionXYZ(x, y, camera_configurations):
     # x et y en pixel
-    pipeline, align, depth_scale, color_intrinsics,color_extrinsics = initialize_device()
+    [pipeline, align, depth_scale, color_intrinsics,color_extrinsics] = camera_configurations 
 
+    time.sleep(1)
     frames = pipeline.wait_for_frames()
     aligned_frames = align.process(frames)
 
@@ -197,12 +197,18 @@ while True:
     mask_blue = blue_hsv()
     detected_img = cv2.bitwise_and(frame, frame, mask= mask_blue)
 
-
     color_green = [0,255,0]
+    color_blue = [255,0,0]
+    '''
     frame, box= find_grid(frame, mask_blue, color_green,taille_rayon)
 
-    color_blue = [255,0,0]
-    elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon,box)
+    
+    if not [box]:
+        print("Invalid box detected. Skipping cube detection.")
+        print(f"Detected box: {box}")
+    else:
+    '''
+    elements_blue, frame, Xs_blue, Ys_blue = find_cube_grid(frame, mask_blue, elements_blue, color_blue, taille_rayon)
 
     cv2.imshow('Contours Connexes', frame)
 
@@ -215,8 +221,14 @@ for i in range(30):
     ret, frame = cap.read()
 cv2.destroyAllWindows()
 cap.release()
+'''
+if not [box]:
+    print("Invalid box detected. Skipping cube detection.")
+else:
+'''
+elements_blue, frame, Xs_blue, Ys_blue = find_cube_grid(frame, mask_blue, elements_blue, color_blue, taille_rayon)
 
-elements_blue, frame, Xs_blue, Ys_blue= find_cube(frame, mask_blue, elements_blue,color_blue,taille_rayon,box)
+
 posX['blue'] = Xs_blue
 posY['blue'] = Ys_blue
 
@@ -229,11 +241,14 @@ for key in posX.keys():
     Xs_values += posx_values
     Ys_values += posy_values
 
-    
+print(f"X_values : {Xs_values}")
+print(f"Y_values : {Ys_values}")
+
 Pos = np.empty((len(Xs_values),3))
+camera_calibration = initialize_device()
 for i in range(len(Xs_values)):
 
-    Pos[i][0],Pos[i][1],Pos[i][2] = positionXYZ(Xs_values[i],Ys_values[i])
+    Pos[i][0],Pos[i][1],Pos[i][2] = positionXYZ(Xs_values[i],Ys_values[i],camera_calibration)
 
 print(Pos)
 print(len(Pos))

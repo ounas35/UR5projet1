@@ -289,8 +289,10 @@ def compute_inverse_kinematics(x, y, z, alpha, beta, gamma):
 
     return np.array([q1, q2, q3, q4, q5, q6])
 
+
 # Find a random cube position and compute the inverse kinematics for it
 def find_and_compute_inverse_kinematics(robot_position, cubes_positions, camera_distance, offset):
+
     # Find a random cube position from the list
     random_index = random.randint(0, len(cubes_positions) - 1)
     cube_position = cubes_positions.pop(random_index)  # Delete the position in the list
@@ -498,6 +500,7 @@ print(len(PoseGrid))
 #-------------------LOOP-------------------
 
 camera_distance = [0.1, 0.1, 0.1] # Distance between the camera and the gripper
+height_cube = 0.05 # Height of the cube
 
 #--------Close the gripper--------
 
@@ -512,6 +515,7 @@ for i in range(9):
 
     # Move to the cube position chosen randomly
     robot.moveJ(joint_angles)
+    #take the cube
     #--------Open the gripper--------
 
     # Move on the top of the cubes 
@@ -521,10 +525,11 @@ for i in range(9):
     robot.moveJ(articulationsGridUpCube)
 
     #Find the grid position of one random position and compute the inverse kinematics
-    joint_angles, pose_cube_robot, cube_position = find_and_compute_inverse_kinematics(poseGridUpCube, PoseGrid, camera_distance, 0.05)
+    joint_angles, pose_cube_robot, cube_position = find_and_compute_inverse_kinematics(poseGridUpCube, PoseGrid, camera_distance, height_cube)
 
     # Move to the position chosen randomly on the grid
     robot.moveJ(joint_angles)
+    #release the cube
     #--------Close the gripper--------
 
     # Move on the top of the grid

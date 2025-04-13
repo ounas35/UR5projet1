@@ -29,21 +29,14 @@ This project involves programming a **UR5 collaborative robot** to perform **pic
 - UR5 robotic arm control via specific Universal Robot libraries (rtde_receive, rtde_control and dashboard_client).
 - Object detection using OpenCV and pyrealsense2 to control Intel RealSense D435i camera.
 - Automated pick-and-place
-- Real-time image analysis
 
 ---
 
 ## 🧠 System Architecture
 
-[RealSense Camera]
-        ↓
-[Image Processing Node (Python + OpenCV)]
-        ↓
-[Object Position (Realsense Lybraries)]
-        ↓
-[Inverse Kinematics (Scipy + Manual Transformation)]
-        ↓
-[UR5 Robot Arm (RTDE Control)]
+This is the architecture used :
+
+![System Architecture](./Images_documentation/ur5_system_architecture.jpg)
 
 ## 🛠️ Technologies Used
 
@@ -60,6 +53,8 @@ This project involves programming a **UR5 collaborative robot** to perform **pic
 | `math`                     | Provides basic **mathematical functions**, like trigonometry and algebra. |
 | `time`                     | Controls **time-related functions** (e.g., delays, execution time measurement). |
 | `scipy.spatial.transform`  | Performs **3D geometric transformations**, such as rotations. |
+| `random`                   | It's used to select **randomly** the cube taked.                   |
+
 
 
 ### Hardware
@@ -85,6 +80,8 @@ Open your command prompt (CMD) and run the following command:
 `pip install ur-rtde opencv-python numpy pyrealsense2 rtde_receive rtde_control ur-dashboard-client scipy`
 
 ## 🎥 Demo
+
+[![Demo of the robot](https://img.youtube.com/vi/9dLks65uWc8/0.jpg)](https://www.youtube.com/watch?v=9dLks65uWc8)
 
 ## 📌 TODO / Improvements
 - The code currently detects green, yellow, and blue cubes successfully, but it doesn’t work well with red cubes — the mask for red needs improvement.

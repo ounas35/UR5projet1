@@ -82,18 +82,25 @@ Once the SDK is installed, you can install the `pyrealsense2` and the rest of ly
 ### Installation command
 Open your command prompt (CMD) and run the following command:
 
-```bash
-pip install ur-rtde opencv-python numpy pyrealsense2 rtde_receive rtde_control ur-dashboard-client scipy`
-
-## 🚀 Usage
+`pip install ur-rtde opencv-python numpy pyrealsense2 rtde_receive rtde_control ur-dashboard-client scipy`
 
 ## 🎥 Demo
 
 ## 📌 TODO / Improvements
+- The code currently detects green, yellow, and blue cubes successfully, but it doesn’t work well with red cubes — the mask for red needs improvement.
+- We’ve tested different methods to open and close the gripper. At the moment, the trajectory code simply marks when the gripper should open or close, but doesn't control it directly.
+- The camera-to-gripper calibration is currently a fixed constant. This could be improved by using the camera for more precise, dynamic calibration.
 
 ## 🙋‍♂️ Credits / Authors
 
-## Credits
+This project was developed by :
+
+- **[BRUNEAU Geoffroy]** – Robotics Developer and Vision System Integration  
+- **[URBINA German]** – Robotics Developer and Vision System Integration  
+
+It's the final project for the Robotique et Vision class in IMT - Nord Europe.
+
+## Links used
 
 https://github.com/nickredsox/youtube.git
 

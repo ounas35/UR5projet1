@@ -12,7 +12,6 @@ A collaborative robot system using the UR5 arm for automated pick-and-place task
 - [🛠️ Technologies Used](#-technologies-used)
 - [⚙️ Installation](#-installation)
 - [🎥 Demo](#-demo)
-- [📈 Project Status](#-project-status)
 - [🙌 Credits](#-credits)
 
 ---
@@ -87,7 +86,7 @@ Open your command prompt (CMD) and run the following command:
 - We’ve tested different methods to open and close the gripper. At the moment, the trajectory code simply marks when the gripper should open or close, but doesn't control it directly.
 - The camera-to-gripper calibration is currently a fixed constant. This could be improved by using the camera for more precise, dynamic calibration.
 
-## 🙋‍♂️ Credits / Authors
+## 🙌 Credits
 
 This project was developed by :
 

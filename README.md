@@ -6,15 +6,14 @@ A collaborative robot system using the UR5 arm for automated pick-and-place task
 
 ## 📌 Table of Contents
 
-- [Project Description](#project-description)
-- [Features](#features)
-- [System Architecture](#system-architecture)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Demo](#demo)
-- [Project Status](#project-status)
-- [Credits](#credits)
+- [📝 Project Description](#-project-description)
+- [✨ Features](#-features)
+- [🧠 System Architecture](#-system-architecture)
+- [🛠️ Technologies Used](#-technologies-used)
+- [⚙️ Installation](#-installation)
+- [🎥 Demo](#-demo)
+- [📈 Project Status](#-project-status)
+- [🙌 Credits](#-credits)
 
 ---
 

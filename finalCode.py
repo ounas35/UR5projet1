@@ -8,6 +8,7 @@ import dashboard_client
 import cv2
 import math
 import time
+import random
 from scipy.spatial.transform import Rotation as R
 
 #-------------------FUNCTIONS-------------------
@@ -288,6 +289,21 @@ def compute_inverse_kinematics(x, y, z, alpha, beta, gamma):
 
     return np.array([q1, q2, q3, q4, q5, q6])
 
+# Find a random cube position and compute the inverse kinematics for it
+def find_and_compute_inverse_kinematics(robot_position, cubes_positions, camera_distance, offset):
+    # Find a random cube position from the list
+    random_index = random.randint(0, len(cubes_positions) - 1)
+    cube_position = cubes_positions.pop(random_index)  # Delete the position in the list
+
+    # Create a pose for the cube in the robot's coordinate system
+    pose_cube_robot = np.array(robot_position) + np.array(camera_distance) + np.array(cube_position) + np.array([0,0,offset])
+
+    # Compute the inverse kinematics to get the joint angles of the robot
+    joint_angles = compute_inverse_kinematics(pose_cube_robot)
+
+    # Return the joint angles, the pose of the cube and the cube position
+    return joint_angles, pose_cube_robot, cube_position
+
 
 #-------------------INITIALISATION-------------------
 
@@ -311,6 +327,7 @@ dashboard = dashboard_client.DashboardClient("10.2.30.60")
 
 cap = cv2.VideoCapture(6)  # Open camera for image capture
 robot.moveJ(articulationsCubeUp)  # Move robot to predefined position over cubes
+poseCubeUp = robot_r.getActualTCPPose()  # Get current pose of the robot
 
 # Initial image capture from the camera
 for i in range(30):
@@ -393,7 +410,7 @@ print(len(PosCube))
 
 # Move the robot to grid position for cube placement
 robot.moveJ(articulationsGridUpCube)
-poseGridUp = robot_r.getActualTCPPose()  
+poseGridUpCube = robot_r.getActualTCPPose()  
 
 # Open the camera again for the next detection cycle
 cap = cv2.VideoCapture(6)
@@ -478,9 +495,47 @@ for i in range(len(Xs_values)):
 print(PoseGrid)  
 print(len(PoseGrid))  
 
-#-------------------CYCLE-------------------
+#-------------------LOOP-------------------
 
-robot.moveJ(articulationsCubeUp)
+camera_distance = [0.1, 0.1, 0.1] # Distance between the camera and the gripper
+
+#--------Close the gripper--------
+
+# Move the cubes to the 9 grid positions
+for i in range(9):
+
+    # Move on the top of the cubes 
+    robot.moveJ(articulationsCubeUp) 
+    
+    #Find the cube position of one random cube and compute the inverse kinematics
+    joint_angles, pose_cube_robot, cube_position = find_and_compute_inverse_kinematics(poseCubeUp, PosCube, camera_distance, 0.0)
+
+    # Move to the cube position chosen randomly
+    robot.moveJ(joint_angles)
+    #--------Open the gripper--------
+
+    # Move on the top of the cubes 
+    robot.moveJ(articulationsCubeUp) 
+
+    # Move on the top of the grid
+    robot.moveJ(articulationsGridUpCube)
+
+    #Find the grid position of one random position and compute the inverse kinematics
+    joint_angles, pose_cube_robot, cube_position = find_and_compute_inverse_kinematics(poseGridUpCube, PoseGrid, camera_distance, 0.05)
+
+    # Move to the position chosen randomly on the grid
+    robot.moveJ(joint_angles)
+    #--------Close the gripper--------
+
+    # Move on the top of the grid
+    robot.moveJ(articulationsGridUpCube)
+
+
+
+
+
+
+
 
 
 

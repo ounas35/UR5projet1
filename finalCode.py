@@ -1,11 +1,9 @@
 import cv2
 import numpy as np
 import pyrealsense2 as rs
-import numpy as np 
 import rtde_receive
 import rtde_control
 import dashboard_client
-import cv2
 import math
 import time
 import random

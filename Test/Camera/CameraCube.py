@@ -1,7 +1,9 @@
 import numpy as np 
+'''
 import rtde_receive
 import rtde_control
 import dashboard_client
+
 import cv2
 
 robot_r = rtde_receive.RTDEReceiveInterface("10.2.30.60")
@@ -46,3 +48,4 @@ cv2.destroyAllWindows()
 
 robot.moveJ(articulationsCubeUp)
 
+'''
